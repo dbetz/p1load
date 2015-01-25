@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include "ploader.h"
 
 #ifndef TRUE
@@ -81,7 +80,7 @@ int PL_HardwareFound(PL_state *state, int *pVersion)
     /* receive the chip version */
     for (version = i = 0; i < 8; ++i) {
         int bit = RBit(state, 50);
-        if (bit < 0) {
+        if (bit < 0)
             return FALSE;
         version = ((version >> 1) & 0x7f) | (bit << 7);
     }

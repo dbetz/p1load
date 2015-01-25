@@ -6,6 +6,8 @@ extern "C"
 {
 #endif
 
+#include <stdint.h>
+
 #define LOAD_TYPE_SHUTDOWN      0
 #define LOAD_TYPE_RUN           1
 #define LOAD_TYPE_EEPROM        2

@@ -1,3 +1,8 @@
+#ifdef OS_msys
+#include <unistd.h>
+#else
+#include <time.h>
+#endif
 #include "ploader.h"
 
 #ifndef TRUE
@@ -7,6 +12,7 @@
 
 #define ACK_TIMEOUT 20
 
+static int ms_sleep(unsigned long msecs);
 static void SerialInit(PL_state *state);
 static void TByte(PL_state *state, uint8_t x);
 static void TLong(PL_state *state, uint32_t x);
@@ -36,7 +42,7 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
         TLong(state, data);
     }
     TComm(state);
-    usleep(1000);
+    ms_sleep(1);
     
     /* wait for an ACK */
     while (--retries >= 0) {
@@ -49,6 +55,16 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
     }
     
     return retries >= 0 ? 0 : -1;
+}
+
+static int ms_sleep(unsigned long msecs)
+{
+    struct timespec req;
+    req.tv_sec = (int)(msecs / 1000L);
+    req.tv_nsec = (msecs - (req.tv_sec * 1000)) * 1000000L;
+    while (nanosleep(&req, &req) < 0)
+        ;
+    return 1;
 }
 
 /* this code is adapted from Chip Gracey's PNut IDE */

@@ -30,6 +30,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ************************************************************************/
 
+#define INITGUID
+
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
@@ -37,9 +39,7 @@
 #include <objbase.h>
 #include <setupapi.h>
 
-#ifndef GUID_DEVINTERFACE_COMPORT
 DEFINE_GUID(GUID_DEVINTERFACE_COMPORT, 0x86e0d1e0L, 0x8089, 0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
-#endif
 
 #ifdef MAIN
 int CheckPort(const char* port, void* data)

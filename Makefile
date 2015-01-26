@@ -44,7 +44,7 @@ $(OBJDIR)/p1load.o \
 $(OBJDIR)/ploader.o \
 $(foreach x, $(OSINT), $(OBJDIR)/$(x).o)
 
-CFLAGS+=-Wall
+CFLAGS+=-Wall -DOS_$(OS)
 LDFLAGS=$(CFLAGS)
 
 .PHONY:	default
@@ -53,34 +53,20 @@ default:	$(TARGET)
 DIRS=$(OBJDIR) $(BINDIR)
 
 $(TARGET):	$(BINDIR) $(OBJDIR) $(OBJS)
-	@$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
-	@$(ECHO) link $@
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 $(OBJDIR)/%.o:	$(SRCDIR)/%.c $(HDRS) $(OBJDIR)
-	@$(CC) $(CFLAGS) -c $< -o $@
-	@$(ECHO) $(CC) $@
-
-$(OBJDIR)/%.o:	$(OBJDIR)/%.c $(HDRS) $(OBJDIR)
-	@$(CC) $(CFLAGS) -c $< -o $@
-	@$(ECHO) $(CC) $@
-
-.PHONY:	bin2c
-bin2c:		$(BINDIR)/bin2c$(EXT)
-
-$(BINDIR)/bin2c$(EXT):	$(SRCDIR)/tools/bin2c.c $(BINDIR)
-	@$(CC) $(CFLAGS) $(LDFLAGS) $(SRCDIR)/tools/bin2c.c -o $@
-	@$(ECHO) cc $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(DIRS):
 	$(MKDIR) $@
 
 .PHONY:	clean
 clean:
-	@$(RM) -f -r $(OBJDIR)
-	@$(RM) -f -r $(PROPOBJDIR)
-	@$(RM) -f -r $(BINDIR)
+	$(RM) -f -r $(OBJDIR)
+	$(RM) -f -r $(BINDIR)
 
-.PHONY:
-clean-all:	clean
-	@$(RM) -f -r obj
-	@$(RM) -f -r bin
+.PHONY:	clean-all
+clean-all:
+	$(RM) -f -r obj
+	$(RM) -f -r bin

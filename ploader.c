@@ -12,7 +12,7 @@
 
 #define ACK_TIMEOUT 20
 
-static int ms_sleep(unsigned long msecs);
+static int us_sleep(unsigned long usecs);
 static void SerialInit(PL_state *state);
 static void TByte(PL_state *state, uint8_t x);
 static void TLong(PL_state *state, uint32_t x);
@@ -42,7 +42,7 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
         TLong(state, data);
     }
     TComm(state);
-    ms_sleep(1);
+    us_sleep(1000);
     
     /* wait for an ACK */
     while (--retries >= 0) {
@@ -57,11 +57,11 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
     return retries >= 0 ? 0 : -1;
 }
 
-static int ms_sleep(unsigned long msecs)
+static int us_sleep(unsigned long usecs)
 {
     struct timespec req;
-    req.tv_sec = (int)(msecs / 1000L);
-    req.tv_nsec = (msecs - (req.tv_sec * 1000)) * 1000000L;
+    req.tv_sec = (int)(usecs / 1000000L);
+    req.tv_nsec = (usecs - (req.tv_sec * 1000000L)) * 1000L;
     while (nanosleep(&req, &req) < 0)
         ;
     return 1;

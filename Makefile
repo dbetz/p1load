@@ -3,6 +3,10 @@ RM=rm
 CC=cc
 ECHO=echo
 
+OBJS=\
+$(OBJDIR)/p1load.o \
+$(OBJDIR)/ploader.o
+
 OS?=macosx
 
 ifeq ($(OS),linux)
@@ -10,6 +14,15 @@ CFLAGS+=-DLINUX
 EXT=
 OSINT=osint_linux
 LIBS=
+endif
+
+ifeq ($(OS),raspberrypi)
+OS=linux
+CFLAGS+=-DLINUX -DRASPBERRY_PI
+EXT=
+OSINT=osint_linux
+LIBS=
+OBJS+=$(OBJDIR)/gpio_sysfs.o
 endif
 
 ifeq ($(OS),msys)
@@ -39,10 +52,7 @@ TARGET=$(BINDIR)/p1load$(EXT)
 HDRS=\
 ploader.h
 
-OBJS=\
-$(OBJDIR)/p1load.o \
-$(OBJDIR)/ploader.o \
-$(foreach x, $(OSINT), $(OBJDIR)/$(x).o)
+OBJS+=$(foreach x, $(OSINT), $(OBJDIR)/$(x).o)
 
 CFLAGS+=-Wall -DOS_$(OS)
 LDFLAGS=$(CFLAGS)

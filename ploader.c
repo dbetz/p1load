@@ -1,4 +1,4 @@
-#ifdef OS_msys
+#ifdef MINGW
 #include <unistd.h>
 #else
 #include <time.h>

@@ -26,7 +26,7 @@ OBJS+=$(OBJDIR)/gpio_sysfs.o
 endif
 
 ifeq ($(OS),msys)
-CFLAGS += -DMINGW
+CFLAGS+=MINGW
 EXT=.exe
 OSINT=osint_mingw enumcom
 LIBS=-lsetupapi
@@ -54,7 +54,7 @@ ploader.h
 
 OBJS+=$(foreach x, $(OSINT), $(OBJDIR)/$(x).o)
 
-CFLAGS+=-Wall -DOS_$(OS)
+CFLAGS+=-Wall
 LDFLAGS=$(CFLAGS)
 
 .PHONY:	default

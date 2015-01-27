@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     }
     
 #ifdef RASPBERRY_PI
-    use_reset_method("gpio");
+    use_reset_method("gpio,17,0");
 #endif
 
     switch (InitPort(PORT_PREFIX, port, baudRate, verbose, actualPort)) {

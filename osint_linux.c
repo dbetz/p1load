@@ -46,13 +46,17 @@
 #include "osint.h"
 #ifdef RASPBERRY_PI
 #include "gpio_sysfs.h"
-#define GPIO_PIN    17
 #endif
 
 typedef int HANDLE;
 static HANDLE hSerial = -1;
 static struct termios old_sparm;
 static int continue_terminal = 1;
+
+#ifdef RASPBERRY_PI
+static propellerResetGpioPin = 17;
+static propellerResetGpioLevel = 1;
+#endif
 
 /* Normally we use DTR for reset */
 static reset_method_t reset_method = RESET_WITH_DTR;
@@ -67,9 +71,32 @@ int use_reset_method(char* method)
     else if (strcasecmp(method, "gpio") == 0)
     {
         reset_method = RESET_WITH_GPIO;
-        gpio_export(GPIO_PIN);
-        gpio_write(GPIO_PIN, 0);
-        gpio_direction(GPIO_PIN, 1);
+
+        char *token;
+        token = strtok(method, ",");
+        token = strtok(NULL, ",");
+        if (token)
+        {
+            propellerResetGpioPin = atoi(token);
+        }
+        token = strtok(NULL, ",");
+        if (token)
+        {
+            propellerResetGpioLevel = atoi(token); 
+        }
+
+        printf ("Using GPIO pin %d as Propeller reset ", propellerResetGpioPin);
+        if (propellerResetGpioLevel)
+        {
+            printf ("(HIGH).\n");
+        }
+        else
+        {
+            printf ("(LOW).\n");
+        }
+        gpio_export(propellerResetGpioPin);
+        gpio_write(propellerResetGpioPin, propellerResetGpioLevel ^ 1);
+        gpio_direction(propellerResetGpioPin, 1);
     }
 #endif
     else {
@@ -385,7 +412,7 @@ static void assert_reset(void)
         break;
 #ifdef RASPBERRY_PI
     case RESET_WITH_GPIO:
-        gpio_write(GPIO_PIN, 1);
+        gpio_write(propellerResetGpioPin, propellerResetGpioLevel);
         break;
 #endif
     default:
@@ -414,7 +441,7 @@ static void deassert_reset(void)
         break;
 #ifdef RASPBERRY_PI
     case RESET_WITH_GPIO:
-        gpio_write(GPIO_PIN, 0);
+        gpio_write(propellerResetGpioPin, propellerResetGpioLevel ^ 1);
         break;
 #endif
     default:

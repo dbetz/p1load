@@ -229,6 +229,13 @@ usage: p1load\n\
          [ -v ]                    verbose output\n\
          [ -? ]                    display a usage message and exit\n\
          file                      file to load\n", BAUD_RATE);
+#ifdef RASPBERRY_PI
+printf("\
+\n\
+This version supports resetting the Propeller with a GPIO pin with option: -Dreset=gpio,pin,level\n\
+where \"pin\" is the GPIO number to use and \"level\" is the logic level, 0 or 1. \n\
+");
+#endif
     exit(1);
 }
 

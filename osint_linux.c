@@ -179,16 +179,18 @@ int serial_init(const char* port, unsigned long baud)
         return 0;
     }
 
+    fcntl(hSerial, F_SETFL, 0);
+
     /* get the current options */
     chk("tcgetattr", tcgetattr(hSerial, &old_sparm));
     sparm = old_sparm;
     
     /* set raw input */
 #ifdef MACOSX
-        cfmakeraw(&sparm);
-        sparm.c_cc[VTIME] = 0;
-        sparm.c_cc[VMIN] = 1;
-        chk("cfsetspeed", cfsetspeed(&sparm, tbaud));
+    cfmakeraw(&sparm);
+    sparm.c_cc[VTIME] = 0;
+    sparm.c_cc[VMIN] = 1;
+    chk("cfsetspeed", cfsetspeed(&sparm, tbaud));
 #else
     memset(&sparm, 0, sizeof(sparm));
     sparm.c_cflag     = CS8 | CLOCAL | CREAD;

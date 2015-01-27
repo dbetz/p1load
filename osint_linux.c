@@ -54,8 +54,8 @@ static struct termios old_sparm;
 static int continue_terminal = 1;
 
 #ifdef RASPBERRY_PI
-static propellerResetGpioPin = 17;
-static propellerResetGpioLevel = 1;
+static int propellerResetGpioPin = 17;
+static int propellerResetGpioLevel = 1;
 #endif
 
 /* Normally we use DTR for reset */
@@ -68,7 +68,7 @@ int use_reset_method(char* method)
     else if (strcasecmp(method, "rts") == 0)
        reset_method = RESET_WITH_RTS;
 #ifdef RASPBERRY_PI
-    else if (strcasecmp(method, "gpio") == 0)
+    else if (strncasecmp(method, "gpio", 4) == 0)
     {
         reset_method = RESET_WITH_GPIO;
 

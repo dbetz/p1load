@@ -46,8 +46,7 @@
 #include "osint.h"
 #ifdef RASPBERRY_PI
 #include "gpio_sysfs.h"
-//#define GPIO_PIN    GPIO_PIN
-#define GPIO_PIN    0
+#define GPIO_PIN    17
 #endif
 
 typedef int HANDLE;

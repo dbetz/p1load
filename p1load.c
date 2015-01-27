@@ -156,6 +156,10 @@ int main(int argc, char *argv[])
         }
     }
     
+#ifdef RASPBERRY_PI
+    use_reset_method("gpio");
+#endif
+
     switch (InitPort(PORT_PREFIX, port, baudRate, verbose, actualPort)) {
     case CHECK_PORT_OK:
         printf("Found propeller version %d on %s\n", version, actualPort);

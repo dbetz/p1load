@@ -320,7 +320,7 @@ void serial_done(void)
 #ifdef RASPBERRY_PI
     if (reset_method == RESET_WITH_GPIO)
     {
-        gpio_unexport(GPIO_PIN);
+        gpio_unexport(propellerResetGpioPin);
     }
 #endif
 }

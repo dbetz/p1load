@@ -46,6 +46,8 @@
 #include "osint.h"
 #ifdef RASPBERRY_PI
 #include "gpio_sysfs.h"
+//#define GPIO_PIN    GPIO_PIN
+#define GPIO_PIN    0
 #endif
 
 typedef int HANDLE;
@@ -66,9 +68,9 @@ int use_reset_method(char* method)
     else if (strcasecmp(method, "gpio") == 0)
     {
         reset_method = RESET_WITH_GPIO;
-        gpio_export(17);
-        gpio_write(17, 0);
-        gpio_direction(17, 1);
+        gpio_export(GPIO_PIN);
+        gpio_write(GPIO_PIN, 0);
+        gpio_direction(GPIO_PIN, 1);
     }
 #endif
     else {
@@ -292,7 +294,7 @@ void serial_done(void)
 #ifdef RASPBERRY_PI
     if (reset_method == RESET_WITH_GPIO)
     {
-        gpio_unexport(17);
+        gpio_unexport(GPIO_PIN);
     }
 #endif
 }
@@ -384,7 +386,7 @@ static void assert_reset(void)
         break;
 #ifdef RASPBERRY_PI
     case RESET_WITH_GPIO:
-        gpio_write(17, 1);
+        gpio_write(GPIO_PIN, 1);
         break;
 #endif
     default:
@@ -413,7 +415,7 @@ static void deassert_reset(void)
         break;
 #ifdef RASPBERRY_PI
     case RESET_WITH_GPIO:
-        gpio_write(17, 0);
+        gpio_write(GPIO_PIN, 0);
         break;
 #endif
     default:

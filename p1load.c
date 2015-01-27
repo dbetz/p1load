@@ -58,7 +58,7 @@ static int OpenPort(const char* port, int baud);
 
 int main(int argc, char *argv[])
 {
-    char actualPort[PATH_MAX], *port, *p;
+    char actualPort[PATH_MAX], *var, *val, *port, *p;
     int baudRate, baudRate2, verbose, terminalMode, pstMode, i;
     char *file = NULL;
     int loadType = 0;
@@ -92,6 +92,26 @@ int main(int argc, char *argv[])
                     if (*++p != ':' && *p != '\0')
                         baudRate2 = atoi(p);
                 }
+                break;
+            case 'D':
+                if (argv[i][2])
+                    p = &argv[i][2];
+                else if (++i < argc)
+                    p = argv[i];
+                else
+                    Usage();
+                if ((var = strtok(p, "=")) != NULL) {
+                    if ((val = strtok(NULL, "")) != NULL) {
+                        if (strcmp(var, "reset") == 0)
+                            use_reset_method(val);
+                        else
+                            Usage();
+                    }
+                    else
+                        Usage();
+                }
+                else
+                    Usage();
                 break;
             case 'e':
                 loadType |= LOAD_TYPE_EEPROM;
@@ -156,10 +176,6 @@ int main(int argc, char *argv[])
         }
     }
     
-#ifdef RASPBERRY_PI
-    use_reset_method("gpio,17,0");
-#endif
-
     switch (InitPort(PORT_PREFIX, port, baudRate, verbose, actualPort)) {
     case CHECK_PORT_OK:
         printf("Found propeller version %d on %s\n", version, actualPort);
@@ -203,15 +219,16 @@ printf("\
 p1load - a simple loader for the propeller - version 0.009, 2014-08-10\n\
 usage: p1load\n\
          [ -b baud ]               baud rate (default is %d)\n\
-         [ -p port ]               serial port (default is to auto-detect the port)\n\
+         [ -D var=val ]            set variable value\n\
          [ -e ]                    write a bootable image to EEPROM\n\
+         [ -p port ]               serial port (default is to auto-detect the port)\n\
          [ -P ]                    list available serial ports\n\
          [ -r ]                    run the program after loading\n\
          [ -t ]                    enter terminal mode after running the program\n\
          [ -T ]                    enter PST-compatible terminal mode\n\
          [ -v ]                    verbose output\n\
          [ -? ]                    display a usage message and exit\n\
-         file[,addr]...            files to load\n", BAUD_RATE);
+         file                      file to load\n", BAUD_RATE);
     exit(1);
 }
 

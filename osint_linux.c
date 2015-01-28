@@ -44,7 +44,7 @@
 #include <signal.h>
 
 #include "osint.h"
-#ifdef RASPBERRY_PI
+#ifdef RASPBERRY_PI 
 #include "gpio_sysfs.h"
 #endif
 
@@ -55,15 +55,11 @@ static int continue_terminal = 1;
 
 #ifdef RASPBERRY_PI
 static int propellerResetGpioPin = 17;
-static int propellerResetGpioLevel = 0;
+static int propellerResetGpioLevel = 1;
 #endif
 
 /* Normally we use DTR for reset */
-#ifdef RASPBERRY_PI
-static reset_method_t reset_method = RESET_WITH_GPIO;
-#else
 static reset_method_t reset_method = RESET_WITH_DTR;
-#endif
 
 int use_reset_method(char* method)
 {
@@ -175,56 +171,6 @@ int serial_init(const char* port, unsigned long baud)
         return 0;
     }
 
-    fcntl(hSerial, F_SETFL, 0);
-
-    /* set the baud rate */
-    if (!serial_baud(baud)) {
-        close(hSerial);
-        return 0;
-    }
-
-    fcntl(hSerial, F_SETFL, 0);
-
-    /* get the current options */
-    chk("tcgetattr", tcgetattr(hSerial, &old_sparm));
-    sparm = old_sparm;
-    
-    /* set raw input */
-#ifdef MACOSX
-    cfmakeraw(&sparm);
-    sparm.c_cc[VTIME] = 0;
-    sparm.c_cc[VMIN] = 1;
-    chk("cfsetspeed", cfsetspeed(&sparm, tbaud));
-#else
-    memset(&sparm, 0, sizeof(sparm));
-    sparm.c_cflag     = CS8 | CLOCAL | CREAD;
-    sparm.c_lflag     = 0; // &= ~(ICANON | ECHO | ECHOE | ISIG);
-    sparm.c_oflag     = 0; // &= ~OPOST;
-
-    sparm.c_iflag     = IGNPAR | IGNBRK;
-    sparm.c_cc[VTIME] = 0;
-    sparm.c_cc[VMIN] = 1;
-    chk("cfsetispeed", cfsetispeed(&sparm, tbaud));
-    chk("cfsetospeed", cfsetospeed(&sparm, tbaud));
-#endif
-
-    /* set the options */
-    chk("tcflush", tcflush(hSerial, TCIFLUSH));
-    chk("tcsetattr", tcsetattr(hSerial, TCSANOW, &sparm));
-
-    return 1;
-}
-
-/**
- * change the baud rate of the serial port
- * @param baud - baud rate
- * @returns 1 for success and 0 for failure
- */
-int serial_baud(unsigned long baud)
-{
-    struct termios sparm;
-    int tbaud = 0;
-
     switch(baud) {
         case 0: // default
             tbaud = B115200;
@@ -263,15 +209,8 @@ int serial_baud(unsigned long baud)
         case 38400:
             tbaud = B38400;
             break;
-        case 19200:
-            tbaud = B19200;
-            break;
-        case 9600:
-            tbaud = B9600;
-            break;
         default:
             printf("Unsupported baudrate. Use ");
-            tbaud = baud; break;
 #ifdef B921600
             printf("921600, ");
 #endif
@@ -287,19 +226,33 @@ int serial_baud(unsigned long baud)
 #ifdef B230400
             printf("230400, ");
 #endif
-            printf("115200, 57600, 38400, 19200, or 9600\n");
+            printf("115200, 57600, or 38400\n");
             serial_done();
             exit(2);
             break;
     }
-    
+
+    fcntl(hSerial, F_SETFL, 0);
+
     /* get the current options */
-    chk("tcgetattr", tcgetattr(hSerial, &sparm));
+    chk("tcgetattr", tcgetattr(hSerial, &old_sparm));
+    sparm = old_sparm;
     
     /* set raw input */
 #ifdef MACOSX
-    chk("cfsetspeed", cfsetspeed(&sparm, tbaud));
+        cfmakeraw(&sparm);
+        sparm.c_cc[VTIME] = 0;
+        sparm.c_cc[VMIN] = 1;
+        chk("cfsetspeed", cfsetspeed(&sparm, tbaud));
 #else
+    memset(&sparm, 0, sizeof(sparm));
+    sparm.c_cflag     = CS8 | CLOCAL | CREAD;
+    sparm.c_lflag     = 0; // &= ~(ICANON | ECHO | ECHOE | ISIG);
+    sparm.c_oflag     = 0; // &= ~OPOST;
+
+    sparm.c_iflag     = IGNPAR | IGNBRK;
+    sparm.c_cc[VTIME] = 0;
+    sparm.c_cc[VMIN] = 1;
     chk("cfsetispeed", cfsetispeed(&sparm, tbaud));
     chk("cfsetospeed", cfsetospeed(&sparm, tbaud));
 #endif
@@ -307,7 +260,7 @@ int serial_baud(unsigned long baud)
     /* set the options */
     chk("tcflush", tcflush(hSerial, TCIFLUSH));
     chk("tcsetattr", tcsetattr(hSerial, TCSANOW, &sparm));
-    
+
     return 1;
 }
 
@@ -323,10 +276,10 @@ void serial_done(void)
         close(hSerial);
         hSerial = -1;
     }
-#ifdef RASPBERRY_PI
+#ifdef RASPBERRY_PI 
     if (reset_method == RESET_WITH_GPIO)
     {
-        gpio_unexport(propellerResetGpioPin);
+        // gpio_unexport(propellerResetGpioPin);  FIXME: This does not work on OpenWRT on DLINK-615-D1
     }
 #endif
 }
@@ -416,7 +369,7 @@ static void assert_reset(void)
         cmd = TIOCM_RTS;
         ioctl(hSerial, TIOCMBIS, &cmd); /* assert bit */
         break;
-#ifdef RASPBERRY_PI
+#ifdef RASPBERRY_PI 
     case RESET_WITH_GPIO:
         gpio_write(propellerResetGpioPin, propellerResetGpioLevel);
         break;
@@ -445,7 +398,7 @@ static void deassert_reset(void)
         cmd = TIOCM_RTS;
         ioctl(hSerial, TIOCMBIC, &cmd); /* assert bit */
         break;
-#ifdef RASPBERRY_PI
+#ifdef RASPBERRY_PI 
     case RESET_WITH_GPIO:
         gpio_write(propellerResetGpioPin, propellerResetGpioLevel ^ 1);
         break;
@@ -493,10 +446,10 @@ void msleep(int ms)
 /**
  * simple terminal emulator
  */
-void terminal_mode(int check_for_exit, int pst_mode)
+void terminal_mode(int check_for_exit, int dummy)
 {
     struct termios oldt, newt;
-    char buf[128], realbuf[256];
+    char buf[128];
     ssize_t cnt;
     fd_set set;
     int exit_char = 0xdead; /* not a valid character */
@@ -544,19 +497,17 @@ void terminal_mode(int check_for_exit, int pst_mode)
                         if (buf[i] == 0) {
                           sawexit_valid = 1;
                         } else {
-                          realbuf[realbytes++] = exit_char;
-                          realbuf[realbytes++] = buf[i];
+                          buf[realbytes++] = exit_char;
+                          buf[realbytes++] = buf[i];
                           sawexit_char = 0;
                         }
                       } else if (((int)buf[i] & 0xff) == exit_char) {
                         sawexit_char = 1;
                       } else {
-                        realbuf[realbytes++] = buf[i];
-                        if (pst_mode && buf[i] == '\r')
-                            realbuf[realbytes++] = '\n';
+                        buf[realbytes++] = buf[i];
                       }
                     }
-                    write(fileno(stdout), realbuf, realbytes);
+                    write(fileno(stdout), buf, realbytes);
                 }
             }
             if (FD_ISSET(STDIN_FILENO, &set)) {
@@ -583,3 +534,4 @@ done:
     
 }
 
+int serial_baud(unsigned long baud){return 0;}

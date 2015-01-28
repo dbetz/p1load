@@ -146,7 +146,7 @@ int gpio_write(int pin, int value)
 	snprintf(path, VALUE_MAX, "/sys/class/gpio/gpio%d/value", pin);
 	fd = open(path, O_WRONLY);
 	if (-1 == fd) {
-		fprintf(stderr, "Failed to open gpio%d for writing!\n");
+		fprintf(stderr, "Failed to open gpio%d for writing!\n", pin);
 		return(-1);
 	}
 

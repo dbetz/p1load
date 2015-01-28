@@ -68,7 +68,11 @@ int main(int argc, char *argv[])
     /* initialize */
     baudRate = baudRate2 = BAUD_RATE;
     verbose = terminalMode = pstMode = FALSE;
+#ifdef RASPBERRY_PI
+    port = "/dev/ttyAMA0";
+#else
     port = NULL;
+#endif
     
     /* initialize the loader */
     PL_Init(&state, &serial, NULL);

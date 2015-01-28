@@ -22,7 +22,7 @@
     #define PORT_PREFIX "ttyUSB"
   #endif
 #elif defined(MACOSX)
-  #define PORT_PREFIX "cu.usbserial"
+  #define PORT_PREFIX "cu.usbserial-"
 #else
   #define PORT_PREFIX ""
 #endif
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 #endif
 #if defined(LINUX)
                     static char buf[64];
-                    sprintf(buf, "/dev/ttyUSB%d", atoi(port));
+                    sprintf(buf, "%s%d", PORT_PREFIX, atoi(port));
                     port = buf;
 #endif
                 }
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 #if defined(MACOSX)
                 if (port[0] != '/') {
                     static char buf[64];
-                    sprintf(buf, "/dev/cu.usbserial-%s", port);
+                    sprintf(buf, "%s-%s", PORT_PREFIX, port);
                     port = buf;
                 }
 #endif

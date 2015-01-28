@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 #endif
 #if defined(LINUX)
                     static char buf[64];
-                    sprintf(buf, "%s%d", PORT_PREFIX, atoi(port));
+                    sprintf(buf, "/dev/%s%d", PORT_PREFIX, atoi(port));
                     port = buf;
 #endif
                 }
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 #if defined(MACOSX)
                 if (port[0] != '/') {
                     static char buf[64];
-                    sprintf(buf, "%s-%s", PORT_PREFIX, port);
+                    sprintf(buf, "/dev/%s-%s", PORT_PREFIX, port);
                     port = buf;
                 }
 #endif

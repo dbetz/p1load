@@ -74,15 +74,18 @@ int use_reset_method(char* method)
 
         char *token;
         token = strtok(method, ",");
-        token = strtok(NULL, ",");
         if (token)
         {
-            propellerResetGpioPin = atoi(token);
-        }
-        token = strtok(NULL, ",");
-        if (token)
-        {
-            propellerResetGpioLevel = atoi(token); 
+            token = strtok(NULL, ",");
+            if (token)
+            {
+                propellerResetGpioPin = atoi(token);
+            }
+            token = strtok(NULL, ",");
+            if (token)
+            {
+                propellerResetGpioLevel = atoi(token); 
+            }
         }
 
         printf ("Using GPIO pin %d as Propeller reset ", propellerResetGpioPin);

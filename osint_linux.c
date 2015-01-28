@@ -59,11 +59,7 @@ static int propellerResetGpioLevel = 0;
 #endif
 
 /* Normally we use DTR for reset */
-#ifdef RASPBERRY_PI
-static reset_method_t reset_method = RESET_WITH_GPIO;
-#else
 static reset_method_t reset_method = RESET_WITH_DTR;
-#endif
 
 int use_reset_method(char* method)
 {

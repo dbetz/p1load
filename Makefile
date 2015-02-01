@@ -3,6 +3,8 @@ RM=rm
 CC=cc
 ECHO=echo
 
+CFLAGS=-Wall
+
 OBJS=\
 $(OBJDIR)/p1load.o \
 $(OBJDIR)/ploader.o

@@ -28,7 +28,7 @@ OBJS+=$(OBJDIR)/gpio_sysfs.o
 endif
 
 ifeq ($(OS),msys)
-CFLAGS+=MINGW
+CFLAGS+=-DMINGW
 EXT=.exe
 OSINT=osint_mingw enumcom
 LIBS=-lsetupapi

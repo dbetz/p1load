@@ -464,7 +464,7 @@ void hwreset(void)
     assert_reset();
     msleep(10);
     deassert_reset();
-    msleep(90);
+    msleep(100);
     tcflush(hSerial, TCIFLUSH);
 }
 

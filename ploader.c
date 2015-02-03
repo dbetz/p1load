@@ -32,7 +32,7 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
     int retries = 100;
     uint8_t buf[1];
     int i;
-        
+    
     TLong(state, loadType);
     TLong(state, size / sizeof(uint32_t));
     
@@ -52,6 +52,12 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
             continue;
         if (buf[0] == 0xfe)
             break;
+    }
+    
+    /* wait for eeprom programming and verification */
+    if (loadType == LOAD_TYPE_EEPROM || loadType == LOAD_TYPE_EEPROM_RUN) {
+        /* BUG: need to add handling of ACK/NAK from EEPROM programming */
+        /* BUG: need to add handling of ACK/NAK from EEPROM verification */
     }
     
     return retries >= 0 ? 0 : -1;
@@ -76,19 +82,25 @@ int PL_HardwareFound(PL_state *state, int *pVersion)
     /* initialize the serial buffers */
     SerialInit(state);
     
-    /* reset the propeller */
+    /* reset the propeller (includes post-reset delay of 100ms) */
     (*state->serial->reset)(state->serialData);
     
-    /* send the connect string + blanks for echoes */
+    /* transmit the calibration pulses */
     TByte(state, 0xf9);
+    
+    /* transmit the handshake pattern */
     state->lfsr = 'P';
     for (i = 0; i < 250; ++i)
         TByte(state, IterateLFSR(state) | 0xfe);
+
+    /* transmit calibration pulses to clock out the connection response and the version byte */
     for (i = 0; i < 250 + 8; ++i)
         TByte(state, 0xf9);
+        
+    /* flush the transmit buffer */
     TComm(state);
     
-    /* receive the connect string */
+    /* receive the connection response */
     for (i = 0; i < 250; ++i)
         if (RBit(state, 100) != IterateLFSR(state))
             return FALSE;

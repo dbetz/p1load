@@ -38,17 +38,25 @@ static COMMTIMEOUTS timeouts;
 
 static void ShowLastError(void);
 
-/* normally we use DTR for reset but setting this variable to non-zero will use RTS instead */
-static int use_rts_for_reset = 0;
+/* Normally we use DTR for reset */
+static reset_method_t reset_method = RESET_WITH_DTR;
 
-void serial_use_rts_for_reset(int use_rts)
+int use_reset_method(char* method)
 {
-    use_rts_for_reset = use_rts;
+    if (strcasecmp(method, "dtr") == 0)
+        reset_method = RESET_WITH_DTR;
+    else if (strcasecmp(method, "rts") == 0)
+       reset_method = RESET_WITH_RTS;
+    else {
+        return -1;
+    }
+    return 0;
 }
 
 int serial_init(const char *port, unsigned long baud)
 {
     char fullPort[20];
+    DCB state;
 
     sprintf(fullPort, "\\\\.\\%s", port);
 
@@ -64,46 +72,6 @@ int serial_init(const char *port, unsigned long baud)
     if (hSerial == INVALID_HANDLE_VALUE)
         return FALSE;
 
-    /* Set the baud rate. Always succeeds with mingw. */
-    if (!serial_baud(baud)) {
-        serial_done();
-        return 0;
-    }
-
-
-    GetCommTimeouts(hSerial, &original_timeouts);
-    timeouts = original_timeouts;
-    timeouts.ReadIntervalTimeout = MAXDWORD;
-    timeouts.ReadTotalTimeoutMultiplier = MAXDWORD;
-    timeouts.WriteTotalTimeoutConstant = 1;
-    timeouts.WriteTotalTimeoutMultiplier = 1;
-
-    /* setup device buffers */
-    SetupComm(hSerial, 10000, 10000);
-
-    /* purge any information in the buffer */
-    PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
-
-    return TRUE;
-}
-
-void serial_done(void)
-{
-    if (hSerial != INVALID_HANDLE_VALUE) {
-        FlushFileBuffers(hSerial);
-        CloseHandle(hSerial);
-        hSerial = INVALID_HANDLE_VALUE;
-    }
-}
-
-/**
- * change the baud rate of the serial port
- * @param baud - baud rate
- * @returns 1 for success and 0 for failure
- */
-int serial_baud(unsigned long baud)
-{
-    DCB state;
     GetCommState(hSerial, &state);
     switch (baud) {
     case 9600:
@@ -122,13 +90,8 @@ int serial_baud(unsigned long baud)
         state.BaudRate = CBR_115200;
         break;
     default:
-        printf("Unsupported baudrate. Use ");
-        printf("115200, 57600, 38400, 19200, or 9600\n");
-        printf("Setting default 115200\n");
-        state.BaudRate = CBR_115200;
-        break;
+        return FALSE;
     }
-
     state.ByteSize = 8;
     state.Parity = NOPARITY;
     state.StopBits = ONESTOPBIT;
@@ -146,7 +109,27 @@ int serial_baud(unsigned long baud)
     state.fAbortOnError = FALSE;
     SetCommState(hSerial, &state);
 
-    return 1;
+    GetCommTimeouts(hSerial, &original_timeouts);
+    timeouts = original_timeouts;
+    timeouts.ReadIntervalTimeout = MAXDWORD;
+    timeouts.ReadTotalTimeoutMultiplier = MAXDWORD;
+
+    /* setup device buffers */
+    SetupComm(hSerial, 10000, 10000);
+
+    /* purge any information in the buffer */
+    PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
+
+    return TRUE;
+}
+
+void serial_done(void)
+{
+    if (hSerial != INVALID_HANDLE_VALUE) {
+        FlushFileBuffers(hSerial);
+        CloseHandle(hSerial);
+        hSerial = INVALID_HANDLE_VALUE;
+    }
 }
 
 /**
@@ -210,11 +193,9 @@ int rx_timeout(uint8_t* buff, int n, int timeout)
  */
 void hwreset(void)
 {
-    // reset then purge port
-    EscapeCommFunction(hSerial, use_rts_for_reset ? SETRTS : SETDTR);
+    EscapeCommFunction(hSerial, reset_method == RESET_WITH_RTS ? SETRTS : SETDTR);
     Sleep(25);
-    PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
-    EscapeCommFunction(hSerial, use_rts_for_reset ? CLRRTS : CLRDTR);
+    EscapeCommFunction(hSerial, reset_method == RESET_WITH_RTS ? CLRRTS : CLRDTR);
     Sleep(90);
     // Purge here after reset helps to get rid of buffered data.
     PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
@@ -295,7 +276,6 @@ void terminal_mode(int check_for_exit, int pst_mode)
                     putchar(EXIT_CHAR);
                     putchar(buf[0]);
                     fflush(stdout);
-                    //sawexit_char = 0;
                 }
             }
             else if (check_for_exit && buf[0] == EXIT_CHAR) {
@@ -304,7 +284,7 @@ void terminal_mode(int check_for_exit, int pst_mode)
             else {
                 putchar(buf[0]);
                 if (pst_mode && buf[0] == '\r')
-                  putchar('\n');
+                    putchar('\n');
                 fflush(stdout);
             }
         }
@@ -312,6 +292,13 @@ void terminal_mode(int check_for_exit, int pst_mode)
             if ((buf[0] = getch()) == ESC)
                 break;
             tx(buf, 1);
+/* this should be handled by the library */
+#if 0
+            if(buf[0] == '\r') {
+                buf[0] = '\n';
+                tx(buf, 1);
+            }
+#endif
         }
     }
 

@@ -147,12 +147,12 @@ static void sigint_handler(int signum)
 /**
  * open serial port
  * @param port - COMn port name
+ * @param baud - baud rate
  * @returns hSerial - file handle to serial port
  */
 int serial_init(const char* port, unsigned long baud)
 {
     struct termios sparm;
-    int tbaud = 0;
 
     /* open the port */
 #ifdef MACOSX
@@ -174,8 +174,6 @@ int serial_init(const char* port, unsigned long baud)
         return 0;
     }
 
-    fcntl(hSerial, F_SETFL, 0);
-
     /* set the baud rate */
     if (!serial_baud(baud)) {
         close(hSerial);
@@ -193,7 +191,6 @@ int serial_init(const char* port, unsigned long baud)
     cfmakeraw(&sparm);
     sparm.c_cc[VTIME] = 0;
     sparm.c_cc[VMIN] = 1;
-    chk("cfsetspeed", cfsetspeed(&sparm, tbaud));
 #else
     memset(&sparm, 0, sizeof(sparm));
     sparm.c_cflag     = CS8 | CLOCAL | CREAD;
@@ -203,8 +200,6 @@ int serial_init(const char* port, unsigned long baud)
     sparm.c_iflag     = IGNPAR | IGNBRK;
     sparm.c_cc[VTIME] = 0;
     sparm.c_cc[VMIN] = 1;
-    chk("cfsetispeed", cfsetispeed(&sparm, tbaud));
-    chk("cfsetospeed", cfsetospeed(&sparm, tbaud));
 #endif
 
     /* set the options */
@@ -269,8 +264,11 @@ int serial_baud(unsigned long baud)
             tbaud = B9600;
             break;
         default:
+            // try just using the supplied baud rate
+            tbaud = baud;
+            break;
+#if 0
             printf("Unsupported baudrate. Use ");
-            tbaud = baud; break;
 #ifdef B921600
             printf("921600, ");
 #endif
@@ -289,6 +287,7 @@ int serial_baud(unsigned long baud)
             printf("115200, 57600, 38400, 19200, or 9600\n");
             serial_done();
             exit(2);
+#endif
             break;
     }
     

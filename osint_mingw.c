@@ -72,26 +72,13 @@ int serial_init(const char *port, unsigned long baud)
     if (hSerial == INVALID_HANDLE_VALUE)
         return FALSE;
 
-    GetCommState(hSerial, &state);
-    switch (baud) {
-    case 9600:
-        state.BaudRate = CBR_9600;
-        break;
-    case 19200:
-        state.BaudRate = CBR_19200;
-        break;
-    case 38400:
-        state.BaudRate = CBR_38400;
-        break;
-    case 57600:
-        state.BaudRate = CBR_57600;
-        break;
-    case 115200:
-        state.BaudRate = CBR_115200;
-        break;
-    default:
-        return FALSE;
+    /* set the baud rate */
+    if (!serial_baud(baud)) {
+        CloseHandle(hSerial);
+        return 0;
     }
+
+    GetCommState(hSerial, &state);
     state.ByteSize = 8;
     state.Parity = NOPARITY;
     state.StopBits = ONESTOPBIT;
@@ -119,6 +106,40 @@ int serial_init(const char *port, unsigned long baud)
 
     /* purge any information in the buffer */
     PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
+
+    return TRUE;
+}
+
+/**
+ * change the baud rate of the serial port
+ * @param baud - baud rate
+ * @returns 1 for success and 0 for failure
+ */
+int serial_baud(unsigned long baud)
+{
+    DCB state;
+
+    GetCommState(hSerial, &state);
+    switch (baud) {
+    case 9600:
+        state.BaudRate = CBR_9600;
+        break;
+    case 19200:
+        state.BaudRate = CBR_19200;
+        break;
+    case 38400:
+        state.BaudRate = CBR_38400;
+        break;
+    case 57600:
+        state.BaudRate = CBR_57600;
+        break;
+    case 115200:
+        state.BaudRate = CBR_115200;
+        break;
+    default:
+        return FALSE;
+    }
+    SetCommState(hSerial, &state);
 
     return TRUE;
 }

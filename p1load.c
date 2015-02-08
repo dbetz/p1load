@@ -44,23 +44,18 @@ enum {
     CHECK_PORT_NO_PROPELLER
 };
 
-#define UNUSED(x)
-
 static void cb_reset(void *data)
 {
-    UNUSED(data); // osint keeps its state in globals
     hwreset();
 }
 
 static int cb_tx(void *data, uint8_t* buf, int n)
 {
-    UNUSED(data); // osint keeps its state in globals
     return tx(buf, n);
 }
 
 static int cb_rx_timeout(void *data, uint8_t* buf, int n, int timeout)
 {
-    UNUSED(data); // osint keeps its state in globals
     return rx_timeout(buf, n, timeout);
 }
 

@@ -35,6 +35,9 @@ typedef struct {
 /* PL_Init - Initializes the loader state structure. */
 void PL_Init(PL_state *state, PL_serial *serial, void *data);
 
+/* PL_Shutdown - Shutdown the loader.*/
+void PL_Shutdown(PL_state *state);
+
 /* PL_HardwareFound - Sends the handshake sequence and returns non-zero if a Propeller
    chip is found on the serial interface and also sets the version parameter to the
    chip version.

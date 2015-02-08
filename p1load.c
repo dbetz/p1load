@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
     if (file) {
         if ((image = ReadEntireFile(file, &imageSize)) != NULL) {
             printf("Loading '%s' (%ld bytes)\n", file, imageSize);
-            if (PL_LoadSpinBinary(&state, loadType, image, imageSize) != 0)
+            if (PL_LoadSpinBinary(&state, loadType, image, imageSize) <= 0)
                 printf("Load failed!\n");
         }
     }

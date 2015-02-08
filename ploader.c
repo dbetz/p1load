@@ -1,8 +1,4 @@
-#ifdef MINGW
-#include <unistd.h>
-#else
-#include <time.h>
-#endif
+#include <stdio.h>
 #include "ploader.h"
 
 #ifndef TRUE
@@ -10,9 +6,12 @@
 #define FALSE   0
 #endif
 
-#define ACK_TIMEOUT 20
+#define ACK_TIMEOUT                 25
+#define CHECKSUM_RETRIES            (2000 / ACK_TIMEOUT)
+#define EEPROM_PROGRAMMING_RETRIES  (5000 / ACK_TIMEOUT)
+#define EEPROM_VERIFICATION_RETRIES (2000 / ACK_TIMEOUT)
 
-static int us_sleep(unsigned long usecs);
+static int WaitForAck(PL_state *state, int retries);
 static void SerialInit(PL_state *state);
 static void TByte(PL_state *state, uint8_t x);
 static void TLong(PL_state *state, uint32_t x);
@@ -26,13 +25,20 @@ void PL_Init(PL_state *state, PL_serial *serial, void *data)
     state->serialData = data;
 }
 
+/* PL_Shutdown - shutdown the loader */
+void PL_Shutdown(PL_state *state)
+{
+    TLong(state, LOAD_TYPE_SHUTDOWN);
+    TComm(state);
+}
+
 /* PL_LoadSpinBinary - load a spin binary using the rom loader */
 int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
 {
-    int retries = 100;
-    uint8_t buf[1];
-    int i;
+    int i, sts;
     
+    printf("Loading hub memory ... "); fflush(stdout);
+
     TLong(state, loadType);
     TLong(state, size / sizeof(uint32_t));
     
@@ -42,35 +48,56 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
         TLong(state, data);
     }
     TComm(state);
-    us_sleep(1000);
     
-    /* wait for an ACK */
-    while (--retries >= 0) {
-        TByte(state, 0xf9);
-        TComm(state);
-        if ((*state->serial->rx_timeout)(state->serialData, buf, 1, ACK_TIMEOUT) <= 0)
-            continue;
-        if (buf[0] == 0xfe)
-            break;
+    /* wait for an ACK indicating a successful load */
+    if ((sts = WaitForAck(state, CHECKSUM_RETRIES)) <= 0) {
+        if (sts < 0)
+            printf("Timeout waiting for checksum\n");
+        else
+            printf("Checksum error\n");
+        return sts;
     }
+    printf("OK\n");
     
     /* wait for eeprom programming and verification */
     if (loadType == LOAD_TYPE_EEPROM || loadType == LOAD_TYPE_EEPROM_RUN) {
-        /* BUG: need to add handling of ACK/NAK from EEPROM programming */
-        /* BUG: need to add handling of ACK/NAK from EEPROM verification */
+    
+        /* wait for an ACK indicating a successful EEPROM programming */
+        printf("Writing EEPROM ... "); fflush(stdout);
+        if ((sts = WaitForAck(state, EEPROM_PROGRAMMING_RETRIES)) <= 0) {
+            if (sts < 0)
+                printf("Timeout\n");
+            else
+                printf("Failed\n");
+            return sts;
+        }
+        printf("OK\n");
+    
+        /* wait for an ACK indicating a successful EEPROM verification */
+        printf("Verifying EEPROM ... "); fflush(stdout);
+        if ((sts = WaitForAck(state, EEPROM_VERIFICATION_RETRIES)) <= 0) {
+            if (sts < 0)
+                printf("Timeout\n");
+            else
+                printf("Failed\n");
+            return sts;
+        }
+        printf("OK\n");
     }
     
-    return retries >= 0 ? 0 : -1;
+    return 1;
 }
 
-static int us_sleep(unsigned long usecs)
+static int WaitForAck(PL_state *state, int retries)
 {
-    struct timespec req;
-    req.tv_sec = (int)(usecs / 1000000L);
-    req.tv_nsec = (usecs - (req.tv_sec * 1000000L)) * 1000L;
-    while (nanosleep(&req, &req) < 0)
-        ;
-    return 1;
+    uint8_t buf[1];
+    while (--retries >= 0) {
+        TByte(state, 0xf9);
+        TComm(state);
+        if ((*state->serial->rx_timeout)(state->serialData, buf, 1, ACK_TIMEOUT) > 0)
+            return buf[0] == 0xfe;
+    }
+    return -1; // timeout
 }
 
 /* this code is adapted from Chip Gracey's PNut IDE */

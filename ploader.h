@@ -36,7 +36,7 @@ typedef struct {
     void *serialData;
     
     /* load progress interface */
-    void (*progress)(void *data, int phase, int current, int total);
+    void (*progress)(void *data, int phase, int current);
     void *progressData;
     
     /* internal variables */

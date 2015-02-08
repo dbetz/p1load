@@ -49,7 +49,7 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
         
         /* report load progress */
         if (state->progress && (i % 1024) == 0)
-            (*state->progress)(state->progressData, LOAD_PHASE_PROGRAM, i, size);
+            (*state->progress)(state->progressData, LOAD_PHASE_PROGRAM, i);
     
         /* transmit the next long */
         uint32_t data = image[i] | (image[i + 1] << 8) | (image[i + 2] << 16) | (image[i + 3] << 24);
@@ -68,7 +68,7 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
     
         /* report the start of the eeprom writing phase */
         if (state->progress)
-            (*state->progress)(state->progressData, LOAD_PHASE_EEPROM_WRITE, 0, size);
+            (*state->progress)(state->progressData, LOAD_PHASE_EEPROM_WRITE, 0);
 
         /* wait for an ACK indicating a successful EEPROM programming */
         if ((sts = WaitForAck(state, EEPROM_PROGRAMMING_RETRIES)) < 0)
@@ -78,7 +78,7 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
     
         /* report the start of the eeprom verification phase */
         if (state->progress)
-            (*state->progress)(state->progressData, LOAD_PHASE_EEPROM_VERIFY, 0, size);
+            (*state->progress)(state->progressData, LOAD_PHASE_EEPROM_VERIFY, 0);
 
         /* wait for an ACK indicating a successful EEPROM verification */
         if ((sts = WaitForAck(state, EEPROM_VERIFICATION_RETRIES)) < 0)
@@ -89,7 +89,7 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
     
     /* report load completion */
     if (state->progress)
-        (*state->progress)(state->progressData, LOAD_PHASE_DONE, 0, size);
+        (*state->progress)(state->progressData, LOAD_PHASE_DONE, 0);
 
     return LOAD_STS_OK;
 }
@@ -117,7 +117,7 @@ int PL_HardwareFound(PL_state *state, int *pVersion)
     
     /* report the start of the handshake phase */
     if (state->progress)
-        (*state->progress)(state->progressData, LOAD_PHASE_HANDSHAKE, 0, 0);
+        (*state->progress)(state->progressData, LOAD_PHASE_HANDSHAKE, 0);
 
     /* reset the propeller (includes post-reset delay of 100ms) */
     (*state->reset)(state->serialData);
@@ -139,7 +139,7 @@ int PL_HardwareFound(PL_state *state, int *pVersion)
     
     /* report the start of the handshake response phase */
     if (state->progress)
-        (*state->progress)(state->progressData, LOAD_PHASE_RESPONSE, 0, 0);
+        (*state->progress)(state->progressData, LOAD_PHASE_RESPONSE, 0);
 
     /* receive the connection response */
     for (i = 0; i < 250; ++i) {
@@ -152,7 +152,7 @@ int PL_HardwareFound(PL_state *state, int *pVersion)
         
     /* report the start of the version phase */
     if (state->progress)
-        (*state->progress)(state->progressData, LOAD_PHASE_VERSION, 0, 0);
+        (*state->progress)(state->progressData, LOAD_PHASE_VERSION, 0);
 
     /* receive the chip version */
     for (version = i = 0; i < 8; ++i) {
@@ -165,7 +165,7 @@ int PL_HardwareFound(PL_state *state, int *pVersion)
         
     /* report handshake completion */
     if (state->progress)
-        (*state->progress)(state->progressData, LOAD_PHASE_HANDSHAKE_DONE, 0, 0);
+        (*state->progress)(state->progressData, LOAD_PHASE_HANDSHAKE_DONE, 0);
 
     /* return successfully */
     return LOAD_STS_OK;

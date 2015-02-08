@@ -59,7 +59,7 @@ static int cb_rx_timeout(void *data, uint8_t* buf, int n, int timeout)
     return rx_timeout(buf, n, timeout);
 }
 
-static void cb_progress(void *data, int phase, int current, int total)
+static void cb_progress(void *data, int phase, int current)
 {
     switch (phase) {
     case LOAD_PHASE_HANDSHAKE:

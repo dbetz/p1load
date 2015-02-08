@@ -59,7 +59,37 @@ static int cb_rx_timeout(void *data, uint8_t* buf, int n, int timeout)
     return rx_timeout(buf, n, timeout);
 }
 
-static PL_serial serial = { cb_reset, cb_tx, cb_rx_timeout };
+static void cb_progress(void *data, int phase, int current, int total)
+{
+    switch (phase) {
+    case LOAD_PHASE_HANDSHAKE:
+        break;
+    case LOAD_PHASE_RESPONSE:
+        break;
+    case LOAD_PHASE_VERSION:
+        break;
+    case LOAD_PHASE_HANDSHAKE_DONE:
+        break;
+    case LOAD_PHASE_PROGRAM:
+        printf("\rLoading hub memory ... %d", current);
+        fflush(stdout);
+        break;
+    case LOAD_PHASE_EEPROM_WRITE:
+        printf("\rLoading hub memory ... OK        \nWriting EEPROM ... ");
+        fflush(stdout);
+        break;
+    case LOAD_PHASE_EEPROM_VERIFY:
+        printf("OK\nVerifying EEPROM ... ");
+        fflush(stdout);
+        break;
+    case LOAD_PHASE_DONE:
+        printf("OK\n");
+        break;
+    default:
+        break;
+    }
+}
+
 static PL_state state;
 static int version;
 
@@ -86,7 +116,11 @@ int main(int argc, char *argv[])
     port = NULL;
     
     /* initialize the loader */
-    PL_Init(&state, &serial, NULL);
+    PL_Init(&state);
+    state.reset = cb_reset;
+    state.tx = cb_tx;
+    state.rx_timeout = cb_rx_timeout;
+    state.progress = cb_progress;
     
     /* process the position-independent arguments */
     for (i = 1; i < argc; ++i) {
@@ -210,8 +244,19 @@ int main(int argc, char *argv[])
     if (file) {
         if ((image = ReadEntireFile(file, &imageSize)) != NULL) {
             printf("Loading '%s' (%ld bytes)\n", file, imageSize);
-            if (PL_LoadSpinBinary(&state, loadType, image, imageSize) <= 0)
-                printf("Load failed!\n");
+            switch (PL_LoadSpinBinary(&state, loadType, image, imageSize)) {
+            case LOAD_STS_OK:
+                break;
+            case LOAD_STS_ERROR:
+                printf("Error\n");
+                break;
+            case LOAD_STS_TIMEOUT:
+                printf("Timeout\n");
+                break;
+            default:
+                printf("Internal error\n");
+                break;
+            }
         }
     }
     
@@ -347,7 +392,7 @@ static int OpenPort(const char* port, int baud)
         return CHECK_PORT_OPEN_FAILED;
         
     /* check for a propeller on this port */
-    if (!PL_HardwareFound(&state, &version)) {
+    if (PL_HardwareFound(&state, &version) != LOAD_STS_OK) {
         serial_done();
         return CHECK_PORT_NO_PROPELLER;
     }

@@ -83,7 +83,6 @@ static void cb_progress(void *data, int phase, int current)
         fflush(stdout);
         break;
     case LOAD_PHASE_DONE:
-        printf(" -- OK\n");
         break;
     default:
         break;
@@ -246,6 +245,7 @@ int main(int argc, char *argv[])
             printf("Loading '%s' (%ld bytes)\n", file, imageSize);
             switch (PL_LoadSpinBinary(&state, loadType, image, imageSize)) {
             case LOAD_STS_OK:
+                printf(" -- OK\n");
                 break;
             case LOAD_STS_ERROR:
                 printf(" -- Error\n");

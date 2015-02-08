@@ -248,13 +248,13 @@ int main(int argc, char *argv[])
             case LOAD_STS_OK:
                 break;
             case LOAD_STS_ERROR:
-                printf("Error\n");
+                printf(" -- Error\n");
                 break;
             case LOAD_STS_TIMEOUT:
-                printf("Timeout\n");
+                printf(" -- Timeout\n");
                 break;
             default:
-                printf("Internal error\n");
+                printf(" -- Internal error\n");
                 break;
             }
         }

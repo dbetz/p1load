@@ -75,7 +75,7 @@ static void cb_progress(void *data, int phase, int current)
         fflush(stdout);
         break;
     case LOAD_PHASE_EEPROM_WRITE:
-        printf("\rLoading hub memory ... OK        \nWriting EEPROM ... ");
+        printf(" -- OK\nWriting EEPROM ... ");
         fflush(stdout);
         break;
     case LOAD_PHASE_EEPROM_VERIFY:
@@ -83,7 +83,7 @@ static void cb_progress(void *data, int phase, int current)
         fflush(stdout);
         break;
     case LOAD_PHASE_DONE:
-        printf("OK\n");
+        printf(" -- OK\n");
         break;
     default:
         break;

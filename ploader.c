@@ -57,6 +57,10 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
     }
     TComm(state);
     
+    /* report load of program code finished */
+    if (state->progress)
+        (*state->progress)(state->progressData, LOAD_PHASE_PROGRAM, size);
+    
     /* wait for an ACK indicating a successful load */
     if ((sts = WaitForAck(state, CHECKSUM_RETRIES)) < 0)
         return LOAD_STS_TIMEOUT;
@@ -91,6 +95,7 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
     if (state->progress)
         (*state->progress)(state->progressData, LOAD_PHASE_DONE, 0);
 
+    /* load completed successfully */
     return LOAD_STS_OK;
 }
 

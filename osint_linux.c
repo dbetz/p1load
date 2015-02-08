@@ -257,23 +257,10 @@ int serial_baud(unsigned long baud)
     sparm = old_sparm;
     
     /* set raw input */
-#ifdef MACOSX
-        cfmakeraw(&sparm);
-        sparm.c_cc[VTIME] = 0;
-        sparm.c_cc[VMIN] = 1;
-        chk("cfsetspeed", cfsetspeed(&sparm, tbaud));
-#else
-    memset(&sparm, 0, sizeof(sparm));
-    sparm.c_cflag     = CS8 | CLOCAL | CREAD;
-    sparm.c_lflag     = 0; // &= ~(ICANON | ECHO | ECHOE | ISIG);
-    sparm.c_oflag     = 0; // &= ~OPOST;
-
-    sparm.c_iflag     = IGNPAR | IGNBRK;
+    cfmakeraw(&sparm);
     sparm.c_cc[VTIME] = 0;
     sparm.c_cc[VMIN] = 1;
-    chk("cfsetispeed", cfsetispeed(&sparm, tbaud));
-    chk("cfsetospeed", cfsetospeed(&sparm, tbaud));
-#endif
+    chk("cfsetspeed", cfsetspeed(&sparm, tbaud));
 
     /* set the options */
     chk("tcflush", tcflush(hSerial, TCIFLUSH));

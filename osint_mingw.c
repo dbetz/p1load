@@ -56,7 +56,6 @@ int use_reset_method(char* method)
 int serial_init(const char *port, unsigned long baud)
 {
     char fullPort[20];
-    DCB state;
 
     sprintf(fullPort, "\\\\.\\%s", port);
 
@@ -77,35 +76,6 @@ int serial_init(const char *port, unsigned long baud)
         CloseHandle(hSerial);
         return 0;
     }
-
-    GetCommState(hSerial, &state);
-    state.ByteSize = 8;
-    state.Parity = NOPARITY;
-    state.StopBits = ONESTOPBIT;
-    state.fOutxDsrFlow = FALSE;
-    state.fDtrControl = DTR_CONTROL_DISABLE;
-    state.fOutxCtsFlow = FALSE;
-    state.fRtsControl = RTS_CONTROL_DISABLE;
-    state.fInX = FALSE;
-    state.fOutX = FALSE;
-    state.fBinary = TRUE;
-    state.fParity = FALSE;
-    state.fDsrSensitivity = FALSE;
-    state.fTXContinueOnXoff = TRUE;
-    state.fNull = FALSE;
-    state.fAbortOnError = FALSE;
-    SetCommState(hSerial, &state);
-
-    GetCommTimeouts(hSerial, &original_timeouts);
-    timeouts = original_timeouts;
-    timeouts.ReadIntervalTimeout = MAXDWORD;
-    timeouts.ReadTotalTimeoutMultiplier = MAXDWORD;
-
-    /* setup device buffers */
-    SetupComm(hSerial, 10000, 10000);
-
-    /* purge any information in the buffer */
-    PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 
     return TRUE;
 }
@@ -139,7 +109,33 @@ int serial_baud(unsigned long baud)
     default:
         return FALSE;
     }
+    state.ByteSize = 8;
+    state.Parity = NOPARITY;
+    state.StopBits = ONESTOPBIT;
+    state.fOutxDsrFlow = FALSE;
+    state.fDtrControl = DTR_CONTROL_DISABLE;
+    state.fOutxCtsFlow = FALSE;
+    state.fRtsControl = RTS_CONTROL_DISABLE;
+    state.fInX = FALSE;
+    state.fOutX = FALSE;
+    state.fBinary = TRUE;
+    state.fParity = FALSE;
+    state.fDsrSensitivity = FALSE;
+    state.fTXContinueOnXoff = TRUE;
+    state.fNull = FALSE;
+    state.fAbortOnError = FALSE;
     SetCommState(hSerial, &state);
+
+    GetCommTimeouts(hSerial, &original_timeouts);
+    timeouts = original_timeouts;
+    timeouts.ReadIntervalTimeout = MAXDWORD;
+    timeouts.ReadTotalTimeoutMultiplier = MAXDWORD;
+
+    /* setup device buffers */
+    SetupComm(hSerial, 10000, 10000);
+
+    /* purge any information in the buffer */
+    PurgeComm(hSerial, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 
     return TRUE;
 }

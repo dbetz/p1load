@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
 static void Usage(void)
 {
 printf("\
-p1load - a simple loader for the propeller - version 0.009, 2014-08-10\n\
+p1load - a simple loader for the propeller - version 0.010, 2015-02-08\n\
 usage: p1load\n\
          [ -b baud ]               baud rate (default is %d)\n\
          [ -D var=val ]            set variable value\n\

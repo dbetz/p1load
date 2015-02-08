@@ -276,7 +276,7 @@ int main(int argc, char *argv[])
 static void Usage(void)
 {
 printf("\
-p1load - a simple loader for the propeller - version 0.010, 2015-02-08\n\
+p1load - a simple loader for the propeller - v%s, %s\n\
 usage: p1load\n\
          [ -b baud ]               baud rate (default is %d)\n\
          [ -D var=val ]            set variable value\n\
@@ -288,7 +288,7 @@ usage: p1load\n\
          [ -T ]                    enter PST-compatible terminal mode\n\
          [ -v ]                    verbose output\n\
          [ -? ]                    display a usage message and exit\n\
-         file                      file to load\n", BAUD_RATE);
+         file                      file to load\n", VERSION, __DATE__, BAUD_RATE);
 #ifdef RASPBERRY_PI
 printf("\
 \n\

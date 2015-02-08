@@ -11,6 +11,13 @@ $(OBJDIR)/ploader.o
 
 OS?=macosx
 
+VERSION := $(shell git describe --tags --long 2>/dev/null)
+ifeq ($(VERSION),)
+	VERSION := '0.0.0'
+endif
+
+CFLAGS += -D'VERSION="$(VERSION)"'
+
 ifeq ($(OS),linux)
 CFLAGS+=-DLINUX
 EXT=

@@ -172,6 +172,9 @@ int serial_init(const char* port, unsigned long baud)
         return 0;
     }
 
+    /* get the current options */
+    chk("tcgetattr", tcgetattr(hSerial, &old_sparm));
+
     /* set the baud rate */
     if (!serial_baud(baud)) {
         close(hSerial);
@@ -253,8 +256,7 @@ int serial_baud(unsigned long baud)
     }
 
     /* get the current options */
-    chk("tcgetattr", tcgetattr(hSerial, &old_sparm));
-    sparm = old_sparm;
+    chk("tcgetattr", tcgetattr(hSerial, &sparm));
     
     /* set raw input */
     cfmakeraw(&sparm);

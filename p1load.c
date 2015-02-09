@@ -121,7 +121,11 @@ int main(int argc, char *argv[])
     state.rx_timeout = cb_rx_timeout;
     state.progress = cb_progress;
 #ifdef RASPBERRY_PI
-    use_reset_method("gpio,17,0");
+{
+    char cmd[20] = "gpio,17,0";
+    // use_reset_method uses strtok to parse the string so it can't be a constant
+    use_reset_method(cmd);
+}
 #endif
     
     /* process the position-independent arguments */

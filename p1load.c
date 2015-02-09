@@ -120,6 +120,9 @@ int main(int argc, char *argv[])
     state.tx = cb_tx;
     state.rx_timeout = cb_rx_timeout;
     state.progress = cb_progress;
+#ifdef RASPBERRY_PI
+    use_reset_method("gpio,17,0");
+#endif
     
     /* process the position-independent arguments */
     for (i = 1; i < argc; ++i) {

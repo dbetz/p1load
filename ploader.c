@@ -50,8 +50,6 @@ int PL_LoadSpinBinary(PL_state *state, int loadType, uint8_t *image, int size)
     
     /* download the spin binary */
     for (i = 0; i < size; i += 4) {
-        
-        /* transmit the next long */
         uint32_t data = image[i] | (image[i + 1] << 8) | (image[i + 2] << 16) | (image[i + 3] << 24);
         TLong(state, data);
     }

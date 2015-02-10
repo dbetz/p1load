@@ -306,7 +306,8 @@ usage: p1load\n\
 printf("\
 \n\
 This version supports resetting the Propeller with a GPIO pin with option: -Dreset=gpio,pin,level\n\
-where \"pin\" is the GPIO number to use and \"level\" is the logic level, 0 or 1. \n\
+where \"pin\" is the GPIO number to use and \"level\" is the logic level, 0 or 1. This defaults to\n\
+GPIO 17 and level 0.\n\
 ");
 #endif
     exit(1);

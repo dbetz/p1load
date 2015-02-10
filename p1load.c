@@ -59,7 +59,7 @@ static int cb_rx_timeout(void *data, uint8_t* buf, int n, int timeout)
     return rx_timeout(buf, n, timeout);
 }
 
-static void cb_progress(void *data, int phase, int current)
+static void cb_progress(void *data, int phase)
 {
     switch (phase) {
     case LOAD_PHASE_HANDSHAKE:
@@ -71,11 +71,11 @@ static void cb_progress(void *data, int phase, int current)
     case LOAD_PHASE_HANDSHAKE_DONE:
         break;
     case LOAD_PHASE_PROGRAM:
-        printf("\rLoading hub memory ... %d", current);
+        printf("Loading hub memory ... ");
         fflush(stdout);
         break;
     case LOAD_PHASE_EEPROM_WRITE:
-        printf(" -- OK\nWriting EEPROM ... ");
+        printf("OK\nWriting EEPROM ... ");
         fflush(stdout);
         break;
     case LOAD_PHASE_EEPROM_VERIFY:
@@ -252,16 +252,16 @@ int main(int argc, char *argv[])
             printf("Loading '%s' (%ld bytes)\n", file, imageSize);
             switch (PL_LoadSpinBinary(&state, loadType, image, imageSize)) {
             case LOAD_STS_OK:
-                printf(" -- OK\n");
+                printf("OK\n");
                 break;
             case LOAD_STS_ERROR:
-                printf(" -- Error\n");
+                printf("Error\n");
                 break;
             case LOAD_STS_TIMEOUT:
-                printf(" -- Timeout\n");
+                printf("Timeout\n");
                 break;
             default:
-                printf(" -- Internal error\n");
+                printf("Internal error\n");
                 break;
             }
         }

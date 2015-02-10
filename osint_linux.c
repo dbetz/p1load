@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2009 by John Steven Denson
  * Modified in 2011 by David Michael Betz
+ * GPIO reset code by Michael Rychlik 
  *
  * MIT License                                                           
  *

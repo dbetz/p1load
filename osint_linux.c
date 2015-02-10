@@ -89,7 +89,7 @@ int use_reset_method(char* method)
             }
         }
 
-        printf ("Using GPIO pin %d as Propeller reset ", propellerResetGpioPin);
+        //printf ("Using GPIO pin %d as Propeller reset ", propellerResetGpioPin);
         if (propellerResetGpioLevel)
         {
             printf ("(HIGH).\n");

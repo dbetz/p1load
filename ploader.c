@@ -97,6 +97,7 @@ static int WaitForAck(PL_state *state, int retries)
 {
     uint8_t buf[1];
     while (--retries >= 0) {
+        (*state->msleep)(state->serialData, 20);
         TByte(state, 0xf9);
         TComm(state);
         if ((*state->rx_timeout)(state->serialData, buf, 1, ACK_TIMEOUT) > 0)

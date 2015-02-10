@@ -59,6 +59,11 @@ static int cb_rx_timeout(void *data, uint8_t* buf, int n, int timeout)
     return rx_timeout(buf, n, timeout);
 }
 
+static void cb_msleep(void *data, int msecs)
+{
+    msleep(msecs);
+}
+
 static void cb_progress(void *data, int phase)
 {
     switch (phase) {
@@ -120,6 +125,7 @@ int main(int argc, char *argv[])
     state.tx = cb_tx;
     state.rx_timeout = cb_rx_timeout;
     state.progress = cb_progress;
+    state.msleep = cb_msleep;
 #ifdef RASPBERRY_PI
 {
     char cmd[20] = "gpio,17,0";

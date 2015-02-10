@@ -45,6 +45,7 @@ typedef struct {
     void (*reset)(void *data);
     int (*tx)(void *data, uint8_t* buf, int n);
     int (*rx_timeout)(void *data, uint8_t* buf, int n, int timeout);
+    void (*msleep)(void *data, int msecs);
     void *serialData;
     
     /* load progress interface */

@@ -28,7 +28,10 @@
 #endif
 
 /* defaults */
-#define BAUD_RATE   115200
+#define BAUD_RATE       115200
+
+/* constants */
+#define HUB_MEMORY_SIZE 32768
 
 /* CheckPort state structure */
 typedef struct {
@@ -109,8 +112,8 @@ int main(int argc, char *argv[])
 {
     char actualPort[PATH_MAX], *var, *val, *port, *p;
     int baudRate, baudRate2, verbose, terminalMode, pstMode, i;
+    int loadType = LOAD_TYPE_SHUTDOWN;
     char *file = NULL;
-    int loadType = 0;
     long imageSize;
     uint8_t *image;
     
@@ -253,23 +256,42 @@ int main(int argc, char *argv[])
         return 1;
     }
     
+    /* check for a file to load */
     if (file) {
-        if ((image = ReadEntireFile(file, &imageSize)) != NULL) {
-            printf("Loading '%s' (%ld bytes)\n", file, imageSize);
-            switch (PL_LoadSpinBinary(&state, loadType, image, imageSize)) {
-            case LOAD_STS_OK:
-                printf("OK\n");
-                break;
-            case LOAD_STS_ERROR:
-                printf("Error\n");
-                break;
-            case LOAD_STS_TIMEOUT:
-                printf("Timeout\n");
-                break;
-            default:
-                printf("Internal error\n");
-                break;
-            }
+    
+        /* either -r, -e, or both must be given if a file is to be loaded */
+        if (loadType == LOAD_TYPE_SHUTDOWN) {
+            printf("error: must specify -r, -e, or both\n");
+            return 1;
+        }
+        
+        /* read the entire file into a buffer */
+        if (!(image = ReadEntireFile(file, &imageSize))) {
+            printf("error: reading '%s'\n", file);
+            return 1;
+        }
+        
+        /* make sure the file isn't too big for hub memory */
+        if (imageSize > HUB_MEMORY_SIZE) {
+            printf("error: image too big for hub memory\n");
+            return 1;
+        }
+        
+        /* load the file from the memory buffer */
+        printf("Loading '%s' (%ld bytes)\n", file, imageSize);
+        switch (PL_LoadSpinBinary(&state, loadType, image, imageSize)) {
+        case LOAD_STS_OK:
+            printf("OK\n");
+            break;
+        case LOAD_STS_ERROR:
+            printf("Error\n");
+            return 1;
+        case LOAD_STS_TIMEOUT:
+            printf("Timeout\n");
+            return 1;
+        default:
+            printf("Internal error\n");
+            return 1;
         }
     }
     

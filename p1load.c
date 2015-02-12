@@ -112,7 +112,8 @@ int main(int argc, char *argv[])
 {
     char actualPort[PATH_MAX], *var, *val, *port, *p;
     int baudRate, baudRate2, verbose, terminalMode, pstMode, i;
-    int loadType = LOAD_TYPE_SHUTDOWN;
+    int loadType = LOAD_TYPE_RUN;
+    int loadTypeOptionSeen = FALSE;
     char *file = NULL;
     long imageSize;
     uint8_t *image;
@@ -178,6 +179,10 @@ int main(int argc, char *argv[])
                     Usage();
                 break;
             case 'e':
+                if (!loadTypeOptionSeen) {
+                    loadTypeOptionSeen = TRUE;
+                    loadType = 0;
+                }
                 loadType |= LOAD_TYPE_EEPROM;
                 break;
             case 'p':
@@ -213,6 +218,10 @@ int main(int argc, char *argv[])
                 ShowPorts(PORT_PREFIX);
                 break;
             case 'r':
+                if (!loadTypeOptionSeen) {
+                    loadTypeOptionSeen = TRUE;
+                    loadType = 0;
+                }
                 loadType |= LOAD_TYPE_RUN;
                 break;
             case 'T':
@@ -259,12 +268,6 @@ int main(int argc, char *argv[])
     /* check for a file to load */
     if (file) {
     
-        /* either -r, -e, or both must be given if a file is to be loaded */
-        if (loadType == LOAD_TYPE_SHUTDOWN) {
-            printf("error: must specify -r, -e, or both\n");
-            return 1;
-        }
-        
         /* read the entire file into a buffer */
         if (!(image = ReadEntireFile(file, &imageSize))) {
             printf("error: reading '%s'\n", file);
@@ -318,7 +321,7 @@ usage: p1load\n\
          [ -e ]                    write a bootable image to EEPROM\n\
          [ -p port ]               serial port (default is to auto-detect the port)\n\
          [ -P ]                    list available serial ports\n\
-         [ -r ]                    run the program after loading\n\
+         [ -r ]                    run the program after loading (default)\n\
          [ -t ]                    enter terminal mode after running the program\n\
          [ -T ]                    enter PST-compatible terminal mode\n\
          [ -v ]                    verbose output\n\

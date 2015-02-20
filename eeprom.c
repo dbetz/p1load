@@ -6,6 +6,7 @@
 #include <limits.h>
 #include "port.h"
 #include "ploader.h"
+#include "packet.h"
 #include "osint.h"
 
 #ifndef TRUE
@@ -42,21 +43,19 @@ static uint8_t *ReadEntireFile(char *name, long *pSize);
 int main(int argc, char *argv[])
 {
     char actualPort[PATH_MAX], *var, *val, *port, *p;
-    int baudRate, baudRate2, verbose, terminalMode, pstMode, i;
-    int loadType = LOAD_TYPE_RUN;
-    int loadTypeOptionSeen = FALSE;
+    int baudRate, baudRate2, verbose, i;
     char *file = NULL;
     long imageSize;
     uint8_t *image;
     
     /* initialize */
     baudRate = baudRate2 = BAUD_RATE;
-    verbose = terminalMode = pstMode = FALSE;
+    verbose = FALSE;
     port = NULL;
     
     /* initialize the loader port */
     InitPortState(&state);
-    
+        
     /* process the position-independent arguments */
     for (i = 1; i < argc; ++i) {
 
@@ -97,13 +96,6 @@ int main(int argc, char *argv[])
                 else
                     Usage();
                 break;
-            case 'e':
-                if (!loadTypeOptionSeen) {
-                    loadTypeOptionSeen = TRUE;
-                    loadType = 0;
-                }
-                loadType |= LOAD_TYPE_EEPROM;
-                break;
             case 'p':
                 if (argv[i][2])
                     port = &argv[i][2];
@@ -137,17 +129,6 @@ int main(int argc, char *argv[])
                 ShowPorts(&state, PORT_PREFIX);
                 break;
             case 'r':
-                if (!loadTypeOptionSeen) {
-                    loadTypeOptionSeen = TRUE;
-                    loadType = 0;
-                }
-                loadType |= LOAD_TYPE_RUN;
-                break;
-            case 'T':
-                pstMode = TRUE;
-                // fall through
-            case 't':
-                terminalMode = TRUE;
                 break;
             case 'v':
                 verbose = TRUE;
@@ -168,65 +149,76 @@ int main(int argc, char *argv[])
         }
     }
     
-    if (file || terminalMode) {
-        switch (InitPort(&state, PORT_PREFIX, port, baudRate, verbose, actualPort)) {
-        case CHECK_PORT_OK:
-            printf("Found propeller version %d on %s\n", state.version, actualPort);
-            break;
-        case CHECK_PORT_OPEN_FAILED:
-            printf("error: opening serial port '%s'\n", port);
-            perror("Error is ");
-            return 1;
-        case CHECK_PORT_NO_PROPELLER:
-            if (port)
-                printf("error: no propeller chip on port '%s'\n", port);
-            else
-                printf("error: can't find a port with a propeller chip\n");
-            return 1;
-        }
-    }
-        
-    /* check for a file to load */
-    if (file) {
-    
-        /* read the entire file into a buffer */
-        if (!(image = ReadEntireFile(file, &imageSize))) {
-            printf("error: reading '%s'\n", file);
-            return 1;
-        }
-        
-        /* make sure the file isn't too big for hub memory */
-        if (imageSize > HUB_MEMORY_SIZE) {
-            printf("error: image too big for hub memory\n");
-            return 1;
-        }
-        
-        /* load the file from the memory buffer */
-        printf("Loading '%s' (%ld bytes)\n", file, imageSize);
-        switch (PL_LoadSpinBinary(&state, loadType, image, imageSize)) {
-        case LOAD_STS_OK:
-            printf("OK\n");
-            break;
-        case LOAD_STS_ERROR:
-            printf("Error\n");
-            return 1;
-        case LOAD_STS_TIMEOUT:
-            printf("Timeout\n");
-            return 1;
-        default:
-            printf("Internal error\n");
-            return 1;
-        }
+    switch (InitPort(&state, PORT_PREFIX, port, baudRate, verbose, actualPort)) {
+    case CHECK_PORT_OK:
+        printf("Found propeller version %d on %s\n", state.version, actualPort);
+        break;
+    case CHECK_PORT_OPEN_FAILED:
+        printf("error: opening serial port '%s'\n", port);
+        perror("Error is ");
+        return 1;
+    case CHECK_PORT_NO_PROPELLER:
+        if (port)
+            printf("error: no propeller chip on port '%s'\n", port);
+        else
+            printf("error: can't find a port with a propeller chip\n");
+        return 1;
     }
     
-    /* enter terminal mode if requested */
-    if (terminalMode) {
-        printf("[ Entering terminal mode. Type ESC or Control-C to exit. ]\n");
-        fflush(stdout);
-        if (baudRate2 != baudRate)
-            serial_baud(baudRate2);
-        terminal_mode(FALSE, pstMode);
+#define HELPER  "pkt_test.binary"
+
+    /* read the entire file into a buffer */
+    if (!(image = ReadEntireFile(HELPER, &imageSize))) {
+        printf("error: reading '%s'\n", HELPER);
+        return 1;
     }
+    
+    /* make sure the file isn't too big for hub memory */
+    if (imageSize > HUB_MEMORY_SIZE) {
+        printf("error: image too big for hub memory\n");
+        return 1;
+    }
+    
+    /* load the file from the memory buffer */
+    printf("Loading '%s' (%ld bytes)\n", HELPER, imageSize);
+    switch (PL_LoadSpinBinary(&state, LOAD_TYPE_RUN, image, imageSize)) {
+    case LOAD_STS_OK:
+        printf("OK\n");
+        break;
+    case LOAD_STS_ERROR:
+        printf("Error\n");
+        return 1;
+    case LOAD_STS_TIMEOUT:
+        printf("Timeout\n");
+        return 1;
+    default:
+        printf("Internal error\n");
+        return 1;
+    }
+    
+{
+enum {
+  OP_RESULT,
+  OP_ADD,
+  OP_SUB
+};
+    int32_t type, sts;
+    int32_t buf[2];
+    while (1) {
+        printf("type and two arguments: ");
+        scanf("%d %d %d", &type, &buf[0], &buf[1]);
+        printf("%d %d %d\n", type, buf[0], buf[1]);
+        printf("sizeof(buf) = %lu\n", sizeof(buf));
+        sts = SendPacket(type, (void *)buf, sizeof(buf));
+        printf("SendPacket returned %d\n", sts);
+        if (sts == 0) {
+            sts = ReceivePacket(&type, (void *)buf, sizeof(buf));
+            printf("ReceivePacket returned %d\n", sts);
+            if (sts >= 0)
+                printf("%d %d\n", type, buf[0]);
+        }
+    }
+}
 
     return 0;
 }
@@ -239,21 +231,19 @@ p1load - a simple loader for the propeller - %s, %s\n\
 usage: p1load\n\
          [ -b baud ]               baud rate (default is %d)\n\
          [ -D var=val ]            set variable value\n\
-         [ -e ]                    write a bootable image to EEPROM\n\
          [ -p port ]               serial port (default is to auto-detect the port)\n\
          [ -P ]                    list available serial ports\n\
-         [ -r ]                    run the program after loading (default)\n\
-         [ -t ]                    enter terminal mode after running the program\n\
-         [ -T ]                    enter PST-compatible terminal mode\n\
+         [ -r addr:len ]           read from eeprom\n\
          [ -v ]                    verbose output\n\
+         [ -w addr                 write to eeprom\n\
          [ -? ]                    display a usage message and exit\n\
          file                      file to load\n", VERSION, __DATE__, BAUD_RATE);
 #ifdef RASPBERRY_PI
 printf("\
 \n\
-This version supports resetting the Propeller with a GPIO pin with option: -Dreset=gpio,pin,level\n\
-where \"pin\" is the GPIO number to use and \"level\" is the logic level, 0 or 1. This defaults to\n\
-GPIO 17 and level 0.\n\
+Supports resetting the Propeller with a GPIO pin with option: -Dreset=gpio,pin,level\n\
+where \"pin\" is the GPIO number to use and \"level\" is the logic level, 0 or 1. This\n\
+defaults to GPIO 17 and level 0.\n\
 ");
 #endif
     exit(1);

@@ -48,6 +48,9 @@ typedef struct {
     void (*msleep)(void *data, int msecs);
     void *serialData;
     
+    /* propeller version */
+    int version;
+    
     /* load progress interface */
     void (*progress)(void *data, int phase);
     void *progressData;

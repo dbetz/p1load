@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2009 by John Steven Denson
  * Modified in 2011 by David Michael Betz
+ * GPIO reset code by Michael Rychlik 
  *
  * MIT License                                                           
  *
@@ -88,7 +89,7 @@ int use_reset_method(char* method)
             }
         }
 
-        printf ("Using GPIO pin %d as Propeller reset ", propellerResetGpioPin);
+        //printf ("Using GPIO pin %d as Propeller reset ", propellerResetGpioPin);
         if (propellerResetGpioLevel)
         {
             printf ("(HIGH).\n");

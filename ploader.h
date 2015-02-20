@@ -26,6 +26,18 @@ extern "C"
 #define LOAD_TYPE_EEPROM                2
 #define LOAD_TYPE_EEPROM_RUN            3
 
+/* constants taken from the Propeller Tool loader */
+#define BaudRate                        115200  // Likely Baud rate of Propeller communication
+#define ResetPulsePeriod                25      // Reset pulse size (in ms)
+#define MinResetDelay                   60      // Minimum post-reset delay
+#define MaxResetDelay                   500     // Maximum post-reset delay
+
+/* Transmit buffer size is 32K / 4 = 8K longs * 11 bytes per long plus two longs for the command and size */
+#define TxBufSize                       ((((1024 * 32) / 4) + 2) * 11)
+
+/* Receive buffer is large enough to receive max possible bytes during reset + 250 bytes for handshake response */
+#define RxBufSize                       (((BaudRate / 10 * (ResetPulsePeriod + MaxResetDelay) / 1000) & 0xFFFFFFFE) + 258)
+
 /* loader state structure - filled in by the loader functions */
 typedef struct {
 
@@ -33,16 +45,20 @@ typedef struct {
     void (*reset)(void *data);
     int (*tx)(void *data, uint8_t* buf, int n);
     int (*rx_timeout)(void *data, uint8_t* buf, int n, int timeout);
+    void (*msleep)(void *data, int msecs);
     void *serialData;
     
+    /* propeller version */
+    int version;
+    
     /* load progress interface */
-    void (*progress)(void *data, int phase, int current);
+    void (*progress)(void *data, int phase);
     void *progressData;
     
     /* internal variables */
-    uint8_t txbuf[1024];
+    uint8_t txbuf[TxBufSize];
     int txcnt;
-    uint8_t rxbuf[1024];
+    uint8_t rxbuf[RxBufSize];
     int rxnext;
     int rxcnt;
     uint8_t lfsr;

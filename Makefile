@@ -29,7 +29,7 @@ CFLAGS += -D'VERSION="$(VERSION)"'
 ifeq ($(OS),linux)
 CFLAGS+=-DLINUX
 EXT=
-OSINT=osint_linux
+OSINT=osint_linux.o
 LIBS=
 endif
 

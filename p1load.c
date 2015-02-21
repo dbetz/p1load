@@ -168,30 +168,29 @@ int main(int argc, char *argv[])
         }
     }
     
-    if (file || terminalMode) {
-        switch (InitPort(&state, PORT_PREFIX, port, baudRate, verbose, actualPort)) {
-        case CHECK_PORT_OK:
-            printf("Found propeller version %d on %s\n", state.version, actualPort);
-            break;
-        case CHECK_PORT_OPEN_FAILED:
-            printf("error: opening serial port '%s'\n", port);
-            perror("Error is ");
-            return 1;
-        case CHECK_PORT_NO_PROPELLER:
-            if (port)
-                printf("error: no propeller chip on port '%s'\n", port);
-            else
-                printf("error: can't find a port with a propeller chip\n");
-            return 1;
-        }
-    }
-    
     /* complain about nothing to do */
-    else {
+    if (!file && !terminalMode) {
         printf("error: must specify either a file to load or -t\n");
         return 1;
     }
         
+    /* open the serial port */
+    switch (InitPort(&state, PORT_PREFIX, port, baudRate, verbose, actualPort)) {
+    case CHECK_PORT_OK:
+        printf("Found propeller version %d on %s\n", state.version, actualPort);
+        break;
+    case CHECK_PORT_OPEN_FAILED:
+        printf("error: opening serial port '%s'\n", port);
+        perror("Error is ");
+        return 1;
+    case CHECK_PORT_NO_PROPELLER:
+        if (port)
+            printf("error: no propeller chip on port '%s'\n", port);
+        else
+            printf("error: can't find a port with a propeller chip\n");
+        return 1;
+    }
+    
     /* check for a file to load */
     if (file) {
     

@@ -185,6 +185,12 @@ int main(int argc, char *argv[])
             return 1;
         }
     }
+    
+    /* complain about nothing to do */
+    else {
+        printf("error: must specify either a file to load or -t\n");
+        return 1;
+    }
         
     /* check for a file to load */
     if (file) {

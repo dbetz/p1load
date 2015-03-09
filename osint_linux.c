@@ -165,6 +165,7 @@ int serial_init(const char* port, unsigned long baud)
     }
     
     signal(SIGINT, sigint_handler);
+    atexit(serial_done);
     
     /* set the terminal to exclusive mode */
     if (ioctl(hSerial, TIOCEXCL) != 0) {
@@ -280,6 +281,7 @@ int serial_baud(unsigned long baud)
 void serial_done(void)
 {
     if (hSerial != -1) {
+        ioctl(hSerial, TIOCNXCL);
         tcflush(hSerial, TCIOFLUSH);
         tcsetattr(hSerial, TCSANOW, &old_sparm);
         ioctl(hSerial, TIOCNXCL);

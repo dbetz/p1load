@@ -76,7 +76,7 @@ CFLAGS+=-Wall
 LDFLAGS=$(CFLAGS)
 
 .PHONY:	default
-default:	$(TARGET) $(EEPROM_TARGET)
+default:	$(TARGET) # $(EEPROM_TARGET)
 
 DIRS=$(OBJDIR) $(BINDIR)
 

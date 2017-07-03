@@ -83,8 +83,10 @@ static int CheckPort(const char *port, void *data)
 {
     CheckPortInfo *info = (CheckPortInfo*)data;
     int rc;
-    if (info->verbose)
-        printf("Trying %s                    \n", port); fflush(stdout);
+    if (info->verbose) {
+        printf("Trying %s                    \n", port);
+        fflush(stdout);
+    }
     if ((rc = OpenPort(info->state, port, info->baud)) != CHECK_PORT_OK)
         return rc;
     if (info->actualport) {
